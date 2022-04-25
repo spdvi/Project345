@@ -12,8 +12,6 @@ public class MouseLook : MonoBehaviour
     void Start()
     {
         accumulatedXRotation = 0;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     void Update()
