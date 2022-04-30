@@ -1,17 +1,18 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
-public class LevelManager : MonoBehaviour
+public class Level2Manager : MonoBehaviour
 {
     [Header("Jugador")]
     [SerializeField] private GameObject player;
 
-    [Header("Temporitzador")]
-    [SerializeField] private Countdown countdown;
-    [SerializeField] private float tempsLimit = 30f;
+    //[Header("Temporitzador")]
+    //[SerializeField] private Countdown countdown;
+    //[SerializeField] private float tempsLimit = 30f;
 
     [Header("Eines")]
     [SerializeField] public List<GameObject> einesPrefabs;
@@ -27,15 +28,19 @@ public class LevelManager : MonoBehaviour
 
     [Header("PowerUps")]
     [SerializeField] private GameObject powerUpsPanel;
+    private int selectedPowerUp = 0;
 
     private int magatzemLength = 15, magatzemWidth = 10, magatzemHeight = 7;
     private IntentResultsDto intent = new IntentResultsDto();
-    private Dictionary<string,int> tools = new Dictionary<string,int>();
+    private Dictionary<string, int> tools = new Dictionary<string, int>();
     private List<PowerUpInfo> powerUps = new List<PowerUpInfo>();
+    private List<GameObject> powerUpsGOs = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
+        //EventSystem eventSystem = EventSystem.current;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         einesInicialsNivell = einesPrefabs.Count;
@@ -46,8 +51,8 @@ public class LevelManager : MonoBehaviour
         loseButtonsPanel.SetActive(false);
         winButtonsPanel.SetActive(false);
 
-        countdown.LimitDeTemps = tempsLimit;
-        countdown.countDownEvent.AddListener(CountdownEnded);
+        //countdown.LimitDeTemps = tempsLimit;
+        //countdown.countDownEvent.AddListener(CountdownEnded);
 
         tools.Add("Destral", 1);
         tools.Add("Berbiqui", 3);
@@ -56,6 +61,36 @@ public class LevelManager : MonoBehaviour
 
         StartCoroutine(ApiHelper.StartIntent(2, intent));
 
+        // TODO: Leer powerups que dispone el player desde la api (o playerprefs, o serializado en un fichero).
+        InitPowerUps();
+
+    }
+
+    private void InitPowerUps()
+    {
+        // Suponemos que tiene todas
+        PowerUpInfo androide = new PowerUpInfo();
+        androide.Id = 1;
+        androide.Name = "Androide";
+        powerUps.Add(androide);
+
+        PowerUpInfo teleporting = new PowerUpInfo();
+        teleporting.Id = 2;
+        teleporting.Name = "Teleporting";
+        powerUps.Add(teleporting);
+
+        PowerUpInfo hoverboard = new PowerUpInfo();
+        hoverboard.Id = 3;
+        hoverboard.Name = "Hoverboard";
+        powerUps.Add(hoverboard);
+
+
+        foreach (PowerUpInfo powerUp in powerUps)
+        {
+            GameObject powerupPrefab = Resources.Load<GameObject>(@"PowerUps/" + powerUp.Name);
+            GameObject powerupGameObject = Instantiate<GameObject>(powerupPrefab, powerUpsPanel.transform);
+            powerUpsGOs.Add(powerupGameObject);
+        }
     }
 
     // Update is called once per frame
@@ -74,6 +109,13 @@ public class LevelManager : MonoBehaviour
                 PauseGame(false);
                 levelMenuCanvas.SetActive(true);
             }
+        }
+
+        if (Input.mouseScrollDelta.magnitude > Mathf.Epsilon)
+        {
+            //SelectNextPowerUp();
+            Debug.Log(Input.mouseScrollDelta.magnitude);
+            powerUpsGOs[selectedPowerUp++ % powerUpsGOs.Count].GetComponent<Selectable>().Select();
         }
     }
 
@@ -112,11 +154,6 @@ public class LevelManager : MonoBehaviour
         bool guanya = true;
         foreach (GameObject penjador in penjadors)
         {
-            //if (penjador.transform.parent.childCount < 3)
-            //{
-            //    LoseGame("El penjador " + penjador.transform.name + "està buit. Try again");
-            //    return;
-            //}
             string nomEina;
             if (penjador.transform.parent.childCount < 3)
             {
@@ -136,10 +173,9 @@ public class LevelManager : MonoBehaviour
             {
                 intent.Result.Add(tools[nomTextPenjador], true);
             }
-
-            //intent.Result.Add(idEina, 0);
         }
-        if(guanya)
+
+        if (guanya)
         {
             WinGame();
         }
@@ -155,13 +191,11 @@ public class LevelManager : MonoBehaviour
         Camera.main.GetComponent<MouseLook>().enabled = false;
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = true;
-        countdown.enabled = !disableCountdown;
+        //countdown.enabled = !disableCountdown;
     }
 
     private void LoseGame()
     {
-        // TODO: Call api to end intent and send intent data
-        int id = intent.IdIntent;
         StartCoroutine(ApiHelper.UpdateIntent(intent));
         PauseGame(true);
         if (!levelFinishedCanvas.activeInHierarchy)
@@ -177,13 +211,15 @@ public class LevelManager : MonoBehaviour
 
     private void WinGame()
     {
-        // TODO: Call api to end intent and send intent data
         StartCoroutine(ApiHelper.UpdateIntent(intent));
         PauseGame(true);
+
         if (!levelFinishedCanvas.activeInHierarchy)
         {
             levelFinishedCanvas.SetActive(true);
-            winLoseMessage.text = "Molt bé! Has completat la prova en " + (tempsLimit - countdown.elapsedSeconds).ToString("n2") + " segons!";
+            //winLoseMessage.text = "Molt bé! Has completat la prova en " + (tempsLimit - countdown.elapsedSeconds).ToString("n2") + " segons!";
+            winLoseMessage.text = "Molt bé! Has completat la prova en molt pocs segons!";
+
             if (!winButtonsPanel.activeInHierarchy)
             {
                 winButtonsPanel.SetActive(true);
@@ -214,6 +250,8 @@ public class LevelManager : MonoBehaviour
         Cursor.visible = false;
     }
 
+    
+
     private void CountdownEnded()
     {
         //Debug.Log("Game over. You lose");
@@ -222,7 +260,7 @@ public class LevelManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        countdown.countDownEvent.RemoveListener(CountdownEnded);
+        //countdown.countDownEvent.RemoveListener(CountdownEnded);
     }
 
 }
