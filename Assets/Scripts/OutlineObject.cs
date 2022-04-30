@@ -20,11 +20,11 @@ public class OutlineObject : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Vector3 rayOrigin = sphere1.position;
-        //Vector3 rayDirection = sphere2.position - sphere1.position;   // 5 4 7   magnitude = 10
-        //float distance = Vector3.Distance(sphere2.position, sphere1.position);
-        //Ray ray1 = new Ray(rayOrigin, rayDirection);
-        //Debug.DrawRay(ray1.origin, ray1.direction * distance, Color.cyan);
+        Vector3 rayOrigin = sphere1.position;
+        Vector3 rayDirection = sphere2.position - sphere1.position;   // 5 4 7   magnitude = 10
+        float distance = Vector3.Distance(sphere2.position, sphere1.position);
+        Ray ray1 = new Ray(rayOrigin, rayDirection);
+        Debug.DrawRay(ray1.origin, ray1.direction * distance, Color.cyan);
 
 
         Ray ray = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0f));

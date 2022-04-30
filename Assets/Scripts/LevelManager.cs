@@ -25,13 +25,9 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject loseButtonsPanel;
     [SerializeField] private GameObject winButtonsPanel;
 
-    [Header("PowerUps")]
-    [SerializeField] private GameObject powerUpsPanel;
 
     private int magatzemLength = 15, magatzemWidth = 10, magatzemHeight = 7;
-    private IntentResultsDto intent = new IntentResultsDto();
-    private Dictionary<string,int> tools = new Dictionary<string,int>();
-    private List<PowerUpInfo> powerUps = new List<PowerUpInfo>();
+
 
     // Start is called before the first frame update
     void Start()
@@ -48,14 +44,6 @@ public class LevelManager : MonoBehaviour
 
         countdown.LimitDeTemps = tempsLimit;
         countdown.countDownEvent.AddListener(CountdownEnded);
-
-        tools.Add("Destral", 1);
-        tools.Add("Berbiqui", 3);
-        tools.Add("Martell", 4);
-        tools.Add("Serra", 8);
-
-        StartCoroutine(ApiHelper.StartIntent(2, intent));
-
     }
 
     // Update is called once per frame
@@ -109,44 +97,24 @@ public class LevelManager : MonoBehaviour
     {
         GameObject[] penjadors = GameObject.FindGameObjectsWithTag("Penjador");
 
-        bool guanya = true;
         foreach (GameObject penjador in penjadors)
         {
-            //if (penjador.transform.parent.childCount < 3)
-            //{
-            //    LoseGame("El penjador " + penjador.transform.name + "està buit. Try again");
-            //    return;
-            //}
-            string nomEina;
             if (penjador.transform.parent.childCount < 3)
             {
-                nomEina = "none";
+                LoseGame("El penjador " + penjador.transform.name + "està buit. Try again");
+                return;
             }
-            else
-            {
-                nomEina = penjador.transform.parent.GetChild(2).gameObject.name.Split('(')[0];
-            }
+
+            string nomEina = penjador.transform.parent.GetChild(2).gameObject.name.Split('(')[0];
             string nomTextPenjador = penjador.transform.parent.GetComponentInChildren<TextMeshPro>().text;
             if (!nomTextPenjador.Equals(nomEina))
             {
-                guanya = false;
-                intent.Result.Add(tools[nomTextPenjador], false);
+                LoseGame("You lose... " + nomTextPenjador + " != " + nomEina);
+                return;
             }
-            else
-            {
-                intent.Result.Add(tools[nomTextPenjador], true);
-            }
+        }
 
-            //intent.Result.Add(idEina, 0);
-        }
-        if(guanya)
-        {
-            WinGame();
-        }
-        else
-        {
-            LoseGame();
-        }
+        WinGame();
     }
 
     private void PauseGame(bool disableCountdown)
@@ -158,16 +126,13 @@ public class LevelManager : MonoBehaviour
         countdown.enabled = !disableCountdown;
     }
 
-    private void LoseGame()
+    private void LoseGame(string message)
     {
-        // TODO: Call api to end intent and send intent data
-        int id = intent.IdIntent;
-        StartCoroutine(ApiHelper.UpdateIntent(intent));
         PauseGame(true);
         if (!levelFinishedCanvas.activeInHierarchy)
         {
             levelFinishedCanvas.SetActive(true);
-            winLoseMessage.text = "Alguna eina no està colocada correctament.";
+            winLoseMessage.text = message;
             if (!loseButtonsPanel.activeInHierarchy)
             {
                 loseButtonsPanel.SetActive(true);
@@ -177,9 +142,8 @@ public class LevelManager : MonoBehaviour
 
     private void WinGame()
     {
-        // TODO: Call api to end intent and send intent data
-        StartCoroutine(ApiHelper.UpdateIntent(intent));
         PauseGame(true);
+        
         if (!levelFinishedCanvas.activeInHierarchy)
         {
             levelFinishedCanvas.SetActive(true);
@@ -217,7 +181,7 @@ public class LevelManager : MonoBehaviour
     private void CountdownEnded()
     {
         //Debug.Log("Game over. You lose");
-        CheckToolPlacement();
+        LoseGame("Time out! Has de fer mes via!");
     }
 
     private void OnDestroy()

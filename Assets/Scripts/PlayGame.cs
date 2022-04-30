@@ -9,9 +9,9 @@ public class PlayGame : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        gameObject.GetComponent<Button>().onClick.AddListener(LoadGame);
+        //gameObject.GetComponent<Button>().onClick.AddListener(LoadGame);
     }
-    private void LoadGame()
+    public void LoadGame()
     {
         SceneManager.LoadScene("Level 1");
     }
