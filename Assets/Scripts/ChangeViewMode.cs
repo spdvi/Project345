@@ -21,7 +21,7 @@ public class ChangeViewMode : MonoBehaviour
             wheel.fillAmount += 0.02f;
             if (wheel.fillAmount >= 1f)
             {
-                Debug.Log("Change mode");
+                //Debug.Log("Change mode");
             }
         }
 
